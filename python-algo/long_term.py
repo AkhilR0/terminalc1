@@ -13,6 +13,34 @@
 
 
 class agent_info:
-    enemyHealths = []
-    yourHealths = []
-    agent_reward = 0
+
+    def __init__(self, enemyHealths, yourHealths, agent_reward, totalStates, totalGames):
+        self.enemyHealths = enemyHealths
+        self.yourHealths = yourHealths
+        self.agent_reward = agent_reward
+        self.totalStates = totalStates
+        self.totalGames = totalGames
+    
+       
+
+
+    def updateEnemyHealth(self, health):
+        self.enemyHealths.append(health)
+
+    def updateReward(self, score):
+        self.agent_reward += score
+
+    def updateYourHealth(self, health):
+        self.enemyHealth.append(health)
+
+    def clearStates(self):
+        self.totalStates = []
+ 
+    def gameOver(self):
+        self.totalGames+=1
+        #long term
+        self.clearStates()
+
+
+    
+

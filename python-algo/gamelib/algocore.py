@@ -1,5 +1,5 @@
 import json
-
+from long_term import agent_info
 from .game_state import GameState
 from .util import get_command, debug_write, BANNER_TEXT, send_command
 
@@ -82,7 +82,7 @@ class AlgoCore(object):
                     This is the end game message. This means the game is over so break and finish the program.
                     """
 
-                    
+                    agent_info.gameOver()
                     debug_write("Got end state, game over. Stopping algo.")
                     break
                 else:

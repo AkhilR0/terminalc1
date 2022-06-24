@@ -5,7 +5,7 @@ import torch
 import numpy as np
 from collections import deque
 import random
-from algo_strategy import
+import algo_strategy
 from model import Linear_QNet, QTrainer
 from helper import plot
 

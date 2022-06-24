@@ -7,6 +7,7 @@ import json
 from long_term import *
 import numpy as np
 import torch
+from justcoordinates import correct_coordinates
 
 
 """
@@ -223,6 +224,33 @@ class AlgoStrategy(gamelib.AlgoCore):
         # translate_move(agent.get_action(state_old))
         # gamelib.debug_write(game_state.UNIT_TYPE_TO_INDEX)
 
+        dictionary_for_units = {WALL: [1,0,0], SUPPORT: [0,1,0], TURRET: [0,0,1]}
+        input_array = []
+
+
+        #code for adding healtha and stuff
+        state = [['game_state.my_health', 0, 40], ['game_state.enemy_health', 0, 40], ['game_state.get_resource(0,1)', 0, 40], ['game_state.get_resource(1,1)', 0, 40], ['game_state.get_resource(0,0)', 0, 40], ['game_state.get_resource(1,0)', 0, 40], ['game_state.game_map[x, y]', 0, 40]]
+       
+        for i in state:
+            temp_arr = self.normalize_properly(i[0], i[1], i)
+            for i in temp_arr:
+                input_array.append(i)
+                
+        
+
+        for i in all_coordinates:
+            x = i[0]
+            y = i[1]
+            current_units = game_state.game_map[x,y]
+            current_arr = dictionary_for_units(current_units[0])
+            for haha in current_arr:
+                input_array.append(haha)
+       
+
+        totalStates += input_array
+
+
+
         enemyHealths[game_state.turn_number] = game_state.enemy_health
         agent_reward += 1  # For surviving
         if (game_state.turn_number > 0):
@@ -233,12 +261,12 @@ class AlgoStrategy(gamelib.AlgoCore):
 
         final_move = agent.get_action(state_old)
 
-        total_locations = [[13, 27], [13, 27], [13, 27], [13, 27]]
-        edge_locations = [[13, 27], [13, 27], [13, 27], [13, 27]]
-        normal_locations = [[13, 27], [13, 27], [13, 27], [13, 27]]
+       
 
         number_of_edges = 20 * 8  # change this
         number_of_normal = 50 * 5  # change this
+
+
 
         edge_moves = np.asarray(final_move)
         edge_moves = edge_moves[:number_of_edges]
@@ -304,6 +332,20 @@ class AlgoStrategy(gamelib.AlgoCore):
 
 
 # def translate_move(self, ):
+    def normalize_properly(self, value, mini, maxi):    
+        normalVal = (self.value - self.mini)/(self.maxi - self.mini)   
+        bin128 = int(normalVal*128)
+
+        if bin128 > 127:
+            bin128 = 127
+
+        bin128 = int(bin(bin128))
+        bin128 = bin128.replace("0b", "")
+        
+        return bin128
+
+
+
 
     def starter_strategy(self, game_state):
         """
