@@ -1,4 +1,3 @@
-import gamelib
 import random
 import math
 import warnings
@@ -224,49 +223,125 @@ class AlgoStrategy(gamelib.AlgoCore):
         # translate_move(agent.get_action(state_old))
         # gamelib.debug_write(game_state.UNIT_TYPE_TO_INDEX)
 
-        dictionary_for_units = {WALL: [1,0,0], SUPPORT: [0,1,0], TURRET: [0,0,1]}
-        input_array = []
+# state_old = agent.get_state(game)
+
+#         # Get move
+#         final_move = agent.get_action(state_old)
+
+#         # Perform move and get new state
+#         reward, done, score = game.play_step(final_move)
+#         state_new = agent.get_state(game)
 
 
-        #code for adding healtha and stuff
-        state = [['game_state.my_health', 0, 40], ['game_state.enemy_health', 0, 40], ['game_state.get_resource(0,1)', 0, 40], ['game_state.get_resource(1,1)', 0, 40], ['game_state.get_resource(0,0)', 0, 40], ['game_state.get_resource(1,0)', 0, 40], ['game_state.game_map[x, y]', 0, 40]]
+#         # Train short memory of the agent
+#         agent.train_short_memory(state_old, final_move, reward, state_new, done)
+
+#         # Remember and store in memory
+#         agent.remember(state_old, final_move, reward, state_new, done)
+
+#         if done:
+#             # Train long memory and plot result
+#             game.reset()
+#             agent.n_game += 1
+#             agent.train_long_memory()
+
+#             if score > record_score:
+#                 record_score = score
+#                 agent.model.save()
+
+#             print("Game", agent.n_games, "Score", score, "Record", record_score)
+
+#             plot_scores.append(score)
+#             total_score += score
+#             mean_score = total_score / agent.n_games
+#             plot_mean_scores.append(mean_score)
+#             plot(plot_scores, plot_mean_scores)
+
+        if (game_state.turn_number > 0):
+            is_game_done = false
+            agent.train_short_memory(
+                agent_info_totalStates[-1], agent_info_totalMoves[-1], get_reward(game_state), get_state(game_state), is_game_done)
+            agent.remember(agent_info_totalStates[-1], agent_info_totalMoves[-1], get_reward(game_state), get_state(game_state), is_game_done)
+
+            current_state = get_state(game_state)
+            agent_info_totalStates += current_state
+            final_move = agent.get_action(current_state)
+            agent_info_totalMoves += final_move
+            enemyHealths[game_state.turn_number] = game_state.enemy_health
+            play_step(final_move)
+        else:
+            current_state = get_state(game_state)
+            agent_info_totalStates += current_state
+            final_move = agent.get_action(current_state)
+            agent_info_totalMoves += final_move
+            enemyHealths[game_state.turn_number] = game_state.enemy_health
+            play_step(final_move)
+
+        # code for adding healtha and stuff
+
+        # final_move should be an array of 1s and 0s
+
+        # change this. how does reward work
+      
+
+        # self.starter_strategy(game_state)
+
+        game_state.submit_turn()
+
+    """
+    NOTE: All the methods after this point are part of the sample starter-algo
+    strategy and can safely be replaced for your custom algo.
+    """
+
+
+# def translate_move(self, ):
+    def normalize_properly(self, value, mini, maxi):
+        normalVal = (self.value - self.mini)/(self.maxi - self.mini)
+        bin128 = round(normalVal*128)
+
+        if bin128 > 127:
+            bin128 = 127
+
+        bin128 = bin(bin128)
+        bin128 = int(bin128.replace("0b", ""))
+
+        return bin128
+
+    def get_reward(self, game_state):
        
+        agent_info_agent_reward += 1  # For surviving
+        if (game_state.turn_number > 0):
+            agent_info_agent_reward += enemyHealths[game_state.turn_number] - \
+                enemyHealths[game_state.turn_number -
+                             1]  # for getting health off of your opponent
+            agent_info_agent_reward -= yourHealths[game_state.turn_number] - \
+                yourHealths[game_state.turn_number-1]
+         # for losing health
+
+    def get_state(self, game_state):
+        dictionary_for_units = {WALL: [1, 0, 0],
+                                SUPPORT: [0, 1, 0], TURRET: [0, 0, 1]}
+        input_array = []
+        state = [[game_state.my_health, 0, 40], [game_state.enemy_health, 0, 40], [game_state.get_resource(0, 1), 0, 40], [game_state.get_resource(
+            1, 1), 0, 40], [game_state.get_resource(0, 0), 0, 40], [game_state.get_resource(1, 0), 0, 40], [game_state.game_map[x, y], 0, 40]]
+
         for i in state:
-            temp_arr = self.normalize_properly(i[0], i[1], i)
-            for i in temp_arr:
-                input_array.append(i)
-                
-        
+            temp_arr = (self.normalize_properly(i[0], i[1], i[2])).split()
+            for x in temp_arr:
+                input_array.append(x)
 
         for i in all_coordinates:
             x = i[0]
             y = i[1]
-            current_units = game_state.game_map[x,y]
+            current_units = game_state.game_map[x, y]
             current_arr = dictionary_for_units(current_units[0])
             for haha in current_arr:
                 input_array.append(haha)
-       
+        return input_array
 
-        totalStates += input_array
-
-
-
-        enemyHealths[game_state.turn_number] = game_state.enemy_health
-        agent_reward += 1  # For surviving
-        if (game_state.turn_number > 0):
-            agent_reward += enemyHealths[game_state.turn_number] - \
-                enemyHealths[game_state.turn_number - 1]  # for getting health off of your opponent
-            agent_reward -= yourHealths[game_state.turn_number] - \
-                yourHealths[game_state.turn_number-1]  # for losing health
-
-        final_move = agent.get_action(state_old)
-
-       
-
+    def play_step(self, final_move):
         number_of_edges = 20 * 8  # change this
         number_of_normal = 50 * 5  # change this
-
-
 
         edge_moves = np.asarray(final_move)
         edge_moves = edge_moves[:number_of_edges]
@@ -315,37 +390,6 @@ class AlgoStrategy(gamelib.AlgoCore):
                     game_state.attempt_upgrade(normal_locations[i])  # upgrade
                 else:
                     game_state.attempt_remove(normal_locations[i])  # remove
-
-        # final_move should be an array of 1s and 0s
-
-        # change this. how does reward work
-        reward, done, score = game.play_step(final_move)
-
-        self.starter_strategy(game_state)
-
-        game_state.submit_turn()
-
-    """
-    NOTE: All the methods after this point are part of the sample starter-algo
-    strategy and can safely be replaced for your custom algo.
-    """
-
-
-# def translate_move(self, ):
-    def normalize_properly(self, value, mini, maxi):    
-        normalVal = (self.value - self.mini)/(self.maxi - self.mini)   
-        bin128 = int(normalVal*128)
-
-        if bin128 > 127:
-            bin128 = 127
-
-        bin128 = int(bin(bin128))
-        bin128 = bin128.replace("0b", "")
-        
-        return bin128
-
-
-
 
     def starter_strategy(self, game_state):
         """
